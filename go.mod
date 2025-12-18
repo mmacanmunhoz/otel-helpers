@@ -1,8 +1,8 @@
-module helpers
+module github.com/mmacanmunhoz/otel-helpers
 
 go 1.23.0
 
-toolchain go1.23.11
+toolchain go1.24.5
 
 require (
 	go.opentelemetry.io/contrib/otelconf v0.17.0
