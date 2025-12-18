@@ -49,6 +49,13 @@ meter_provider:
       stream:
         name: "http_errors_total"
         description: "Total HTTP errors by type and endpoint"
+    
+
+    - selector:
+        instrument_name: "external_calls_total"
+      stream:
+        aggregation:
+          drop: {}  # Remove completamente esta métrica
 
 logger_provider:
   processors:
