@@ -5,6 +5,7 @@ Este projeto demonstra uma implementação de microserviço em Go com observabil
 ## 🚀 Características
 
 - **Tracing distribuído** usando OpenTelemetry
+- **Métricas customizadas** com contadores e histogramas
 - **Logging estruturado** com slog
 - **Propagação de contexto** entre serviços
 - **Configuração declarativa** via YAML
@@ -69,6 +70,7 @@ O arquivo de configuração define:
 - **Propagadores**: Contexto de trace e baggage
 - **Exportador**: OTLP HTTP para `localhost:4318`
 - **Processamento**: Batch processing para otimização
+- **Métricas**: Coleta periódica a cada 5 segundos
 
 ```yaml
 file_format: "0.3"
@@ -87,6 +89,15 @@ propagator:
 tracer_provider:
   processors:
     - batch:
+        exporter:
+          otlp:
+            protocol: http/protobuf
+            endpoint: http://localhost:4318
+
+meter_provider:
+  readers:
+    - periodic:
+        interval: 5000  # 5 segundos
         exporter:
           otlp:
             protocol: http/protobuf
@@ -131,6 +142,25 @@ curl "http://localhost:8085/soma?a=10&b=5"
 - Propagação automática de contexto entre serviços
 - Registro de erros e atributos customizados
 - Export para sistemas compatíveis com OTLP
+
+### Métricas
+
+O projeto inclui várias métricas padrão configuradas automaticamente:
+
+#### Contadores:
+- `http_requests_total`: Total de requisições HTTP
+- `external_calls_total`: Total de chamadas para serviços externos  
+- `errors_total`: Total de erros por tipo
+
+#### Histogramas:
+- `http_request_duration_seconds`: Duração das requisições HTTP
+
+#### Atributos das Métricas:
+- `method`: Método HTTP (GET, POST, etc.)
+- `endpoint`: Endpoint acessado
+- `status`: Status code da resposta
+- `error_type`: Tipo de erro (invalid_parameters, external_service_error)
+- `target_service`: Serviço de destino para chamadas externas
 
 ### Logging
 
