@@ -27,6 +27,15 @@ meter_provider:
           otlp:
             protocol: http/protobuf
             endpoint: http://localhost:4318
+        cardinality_limits:    # Limite de filtros relacionado as métricas
+          default: 2000        # Limite padrão conservador
+          counter: 5000        
+          histogram: 1000      
+          gauge: 1500         
+          observable_counter: 3000
+          observable_gauge: 1500
+          up_down_counter: 2000
+          observable_up_down_counter: 2000
   views:
     - selector:
         instrument_name: "http_request_duration_seconds"
@@ -40,3 +49,11 @@ meter_provider:
       stream:
         name: "http_errors_total"
         description: "Total HTTP errors by type and endpoint"
+
+logger_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp:
+            protocol: http/protobuf
+            endpoint: http://localhost:4318
