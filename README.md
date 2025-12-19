@@ -7,7 +7,7 @@ Este projeto demonstra uma implementação de microserviço em Go com observabil
 - **Tracing distribuído** usando OpenTelemetry
 - **Métricas customizadas** com contadores e histogramas  
 - **Logging estruturado** com slog
-- **🆕 Correlação automática de logs** - trace_id e span_id injetados automaticamente
+- **Correlação automática de logs** - trace_id e span_id injetados automaticamente
 - **Propagação de contexto** entre serviços
 - **Configuração declarativa** via YAML
 - **Integração com OTLP** para exportação de telemetria
