@@ -5,8 +5,9 @@ Este projeto demonstra uma implementação de microserviço em Go com observabil
 ## 🚀 Características
 
 - **Tracing distribuído** usando OpenTelemetry
-- **Métricas customizadas** com contadores e histogramas
+- **Métricas customizadas** com contadores e histogramas  
 - **Logging estruturado** com slog
+- **🆕 Correlação automática de logs** - trace_id e span_id injetados automaticamente
 - **Propagação de contexto** entre serviços
 - **Configuração declarativa** via YAML
 - **Integração com OTLP** para exportação de telemetria
@@ -15,11 +16,13 @@ Este projeto demonstra uma implementação de microserviço em Go com observabil
 
 ```
 .
-├── go.mod              # Dependências do módulo Go
-├── main.go             # Aplicação principal com servidor HTTP
-├── otel-config.yaml    # Configuração do OpenTelemetry
+├── go.mod                # Dependências do módulo Go
+├── main.go               # Aplicação principal com servidor HTTP
+├── otel-config.yaml      # Configuração do OpenTelemetry
+├── LOG_CORRELATION.md    # 🆕 Guia de correlação de logs
+├── LIBRARY_USAGE.md      # Como usar como biblioteca
 ├── telemetry/
-│   └── telemetry.go    # Setup e configuração do OpenTelemetry
+│   └── telemetry.go      # Setup e configuração do OpenTelemetry
 └── README.md
 ```
 
@@ -164,17 +167,44 @@ O projeto inclui várias métricas padrão configuradas automaticamente:
 
 ### Logging
 
-- Logs estruturados em formato JSON
-- Correlação automática com trace e span IDs
-- Diferentes níveis de log (Info, Error)
-- Contexto preservado entre chamadas
+- **🆕 Correlação automática**: Logs estruturados com `trace_id` e `span_id` injetados automaticamente
+- **Logs contextual**: Preserva contexto de tracing em toda a cadeia de chamadas
+- **Múltiplos níveis**: Debug, Info, Warn, Error com correlação
+- **Logs de erro integrados**: Erros são registrados no span E no log simultaneamente
+- **Logs HTTP estruturados**: Formato padronizado para requisições HTTP
 
-### Exemplo de Log:
+### 📋 **Métodos de Log Disponíveis:**
+```go
+// Logs básicos com correlação automática
+client.InfoWithTrace(ctx, "Mensagem", "key", "value")
+client.ErrorWithTrace(ctx, "Erro", "details", "info")
+
+// Log de erro + registro no span
+client.LogError(ctx, err, "Descrição", "extra", "data")
+
+// Log HTTP estruturado  
+client.LogHTTPRequest(ctx, "GET", "/api", 200, duration)
+
+// Log + atributos do span
+client.LogWithSpanAttributes(ctx, slog.LevelInfo, "Operação", map[string]any{
+    "user_id": 123,
+    "action": "process",
+})
+```
+
+### Exemplo de Log com Correlação:
 ```json
 {
   "time": "2025-12-18T10:30:00Z",
   "level": "INFO",
-  "msg": "chamada para o serviço 2 realizada com sucesso",
+  "msg": "Processando requisição de soma",
+  "param_a": 10.5,
+  "param_b": 20.3,
+  "endpoint": "/soma",
+  "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736", 
+  "span_id": "00f067aa0ba902b7",
+  "trace_sampled": true
+}
   "response": "200 OK",
   "trace_id": "abc123...",
   "span_id": "def456..."
