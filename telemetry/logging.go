@@ -8,12 +8,10 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// CorrelatedHandler wraps slog.Handler to inject trace information
 type CorrelatedHandler struct {
 	handler slog.Handler
 }
 
-// NewCorrelatedLogger creates a logger that automatically injects trace/span IDs
 func NewCorrelatedLogger(handler slog.Handler) *slog.Logger {
 	return slog.New(&CorrelatedHandler{handler: handler})
 }
@@ -54,7 +52,6 @@ func (h *CorrelatedHandler) WithGroup(name string) slog.Handler {
 }
 
 // LogHTTPRequest logs HTTP request details with trace correlation
-
 func (c *TelemetryClient) LogHTTPRequest(ctx context.Context, method, path string, statusCode int, duration time.Duration, args ...any) {
 	allArgs := append([]any{
 		"http_method", method,
