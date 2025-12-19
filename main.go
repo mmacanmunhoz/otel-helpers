@@ -72,7 +72,8 @@ func main() {
 		b, err2 := strconv.ParseFloat(bStr, 64)
 		if err1 != nil || err2 != nil {
 			paramErr := fmt.Errorf("parâmetros inválidos: a=%v, b=%v", err1, err2)
-			client.LogError(ctx, paramErr, "Erro ao processar parâmetros da requisição", "param_a", aStr, "param_b", bStr)
+			span.RecordError(paramErr)
+			client.Logger.ErrorContext(ctx, "Erro ao processar parâmetros da requisição", "error", paramErr, "param_a", aStr, "param_b", bStr)
 
 			// Record error using library
 			httpMetrics.RecordError(ctx, "invalid_parameters", "/soma")
@@ -86,11 +87,12 @@ func main() {
 		}
 
 		// Log request with span attributes
-		client.LogWithSpanAttributes(ctx, slog.LevelInfo, "Processando requisição de soma", map[string]any{
-			"param_a":  a,
-			"param_b":  b,
-			"endpoint": "/soma",
-		})
+		span.SetAttributes(
+			attribute.Float64("param_a", a),
+			attribute.Float64("param_b", b),
+			attribute.String("endpoint", "/soma"),
+		)
+		client.Logger.InfoContext(ctx, "Processando requisição de soma", "param_a", a, "param_b", b, "endpoint", "/soma")
 
 		client_http := &http.Client{Timeout: 2 * time.Second}
 		req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:8082/calc?a=%f&b=%f", a, b), nil)
@@ -105,7 +107,8 @@ func main() {
 
 		resp, err := client_http.Do(req)
 		if err != nil {
-			client.LogError(ctx, err, "Erro ao chamar serviço externo", "target_service", "calc-service", "endpoint", "/calc")
+			span.RecordError(err)
+			client.Logger.ErrorContext(ctx, "Erro ao chamar serviço externo", "error", err, "target_service", "calc-service", "endpoint", "/calc")
 
 			// Record error using library
 			httpMetrics.RecordError(ctx, "external_service_error", "/soma")
@@ -120,7 +123,7 @@ func main() {
 		defer resp.Body.Close()
 
 		body, _ := ioutil.ReadAll(resp.Body)
-		client.InfoWithTrace(ctx, "Chamada para serviço externo realizada com sucesso",
+		client.Logger.InfoContext(ctx, "Chamada para serviço externo realizada com sucesso",
 			"response_status", resp.Status,
 			"target_service", "calc-service",
 			"response_body", string(body))
@@ -134,6 +137,6 @@ func main() {
 		fmt.Fprintf(w, "Resultado do serviço2: %s", body)
 	})
 
-	client.InfoWithTrace(context.Background(), "Serviço iniciado", "port", ":8085")
+	client.Logger.InfoContext(context.Background(), "Serviço iniciado", "port", ":8085")
 	log.Fatal(http.ListenAndServe(":8085", nil))
 }
